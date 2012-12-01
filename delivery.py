@@ -57,20 +57,15 @@ solns = []
 #G is the graph
 #rt is the remainingTime (initially passed with value of 'b')
 #cs is the current solution
-#ds is the duplicate solution of the current soln
-#curpos, curt - current pos and current remaining time (used in backtracking logic); futpos, futt - future pos and fut remaining time (used in backtracking logic)
+#pos, rt - current pos and current remaining time (used in backtracking logic); nextpos, nextrt - future pos and fut remaining time (used in backtracking logic)
 #pos is the current pos
 def solve(G, b):
 	cs = []
-	ds = []
 	pos = 0
 	nextpos = -1
 	n = len(G)
-	print()
-	print()
 	rt = b
 	cs.append((0, rt))
-	print(cs)
 
 	while len(cs) > 0:
 		def nextPossibleNode():
@@ -90,42 +85,29 @@ def solve(G, b):
 			return -1
 		nextpos = nextPossibleNode()
 		while nextpos != -1:
-			print("selecting ", nextpos)
 			rt -= G[pos][nextpos]["d"]
 			G[pos][nextpos]["v"] = 1
 			pos = nextpos
 			cs.append((pos, rt))
-			print(cs)
-			time.sleep(0.5)
 			nextpos = nextPossibleNode()
-		print("done with a solution")
-		solns.append((cs, rt))
-		#time.sleep(5)
+		solns.append((copy.deepcopy(cs), rt))
 		
-		ds = copy.deepcopy(cs)
-		futpos, futt = ds.pop()
-		curpos, curt = ds[-1]
-		G[curpos][futpos]["v"] = 0
+		nextpos, nextrt = cs.pop()
+		pos, rt = cs[-1]
+		G[pos][nextpos]["v"] = 0
 		def newSolutionPossible():
-			print("pos: ", curpos)
-			print(G[curpos])
 			for j in range(n):
-				if curpos != j:
+				if pos != j:
 					#choose a node only if its not selected previously => v = -1
-					if G[curpos][j]["d"] > 0 and G[curpos][j]["v"] == -1 and G[curpos][j]["d"] <= curt:
+					if G[pos][j]["d"] > 0 and G[pos][j]["v"] == -1 and G[pos][j]["d"] <= rt:
 						return True
 			return False
-		while not newSolutionPossible() and len(ds) > 1:
-			futpos, futt = ds.pop()
-			curpos, curt = ds[-1]
-			G[curpos][futpos]["v"] = 0
-			cs = copy.deepcopy(ds)
-			pos = curpos
-			rt = curt
-		if len(ds) == 1 and not newSolutionPossible():
+		while not newSolutionPossible() and len(cs) > 1:
+			nextpos, nextrt = cs.pop()
+			pos, rt = cs[-1]
+			G[pos][nextpos]["v"] = 0
+		if len(cs) == 1 and not newSolutionPossible():
 			cs = []
-		print("proceeding to next solution")
-		time.sleep(5)
 
 T = int(input())
 
@@ -136,9 +118,17 @@ for i in range(T):
 		u, v, d = [int(i) for i in input().split()]
 		G[u][v]["d"] = d
 
-	for row in G:
-		print(row)
 	solve(G, b)
-	print("solved! -------- ")
-	for soln in solns:
-		print(soln)
+	solnset  = []
+	for item in solns:
+		soln = item[0]
+		dur = item[1]
+		solnset.append([i[0] for i in soln[1:]])
+		solnset[-1].append(-1)
+	bestsoln = []
+	for soln in solnset:
+		if len(set(soln)) > len(set(bestsoln)):
+			bestsoln = soln
+	for i in bestsoln:
+		print(i, end=" ")
+	print()
